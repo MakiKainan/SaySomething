@@ -3,6 +3,7 @@ import { WordsPullUp } from "../components/WordsPullUp";
 import { cn } from "../lib/utils";
 import { runInference } from "../utils/mockInference";
 import { motion } from "motion/react";
+import { ReactiveToxicityField, type FieldState } from "../components/ReactiveToxicityField";
 
 export function InferencePage() {
   const [selectedModel, setSelectedModel] = useState("DistilBERT");
@@ -33,10 +34,20 @@ export function InferencePage() {
     setResult(null);
   };
 
+  // Drive the reactive background from the classification lifecycle.
+  const fieldState: FieldState = isInferencing
+    ? "analyzing"
+    : result
+    ? result.toxic > 0.5
+      ? "toxic"
+      : "clean"
+    : "idle";
+
   return (
-    <div className="min-h-screen bg-black px-6 py-24 sm:py-32 flex flex-col items-center">
-      <div className="w-full max-w-4xl">
-        
+    <div className="relative min-h-screen px-6 py-24 sm:py-32 flex flex-col items-center">
+      <ReactiveToxicityField state={fieldState} score={result?.toxic ?? 0} />
+      <div className="relative z-10 w-full max-w-4xl">
+
         {/* Header */}
         <div className="mb-16">
           <motion.div
@@ -46,12 +57,12 @@ export function InferencePage() {
           >
             <div className="text-white/40 text-xs tracking-widest uppercase mb-4">Toxicity Classifier</div>
           </motion.div>
-          
-          <WordsPullUp 
+
+          <WordsPullUp
             text="Say something"
             className="text-4xl md:text-5xl font-normal text-white tracking-tight mb-4 leading-snug block"
           />
-          
+
           <motion.div
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -133,7 +144,7 @@ export function InferencePage() {
               </div>
             ) : "Analyze"}
           </button>
-          
+
           {result && (
             <button
               onClick={handleClear}
@@ -156,8 +167,8 @@ export function InferencePage() {
               <div>
                 <div className={cn(
                   "py-1.5 px-4 rounded-md w-fit font-bold mb-2 border text-sm md:text-base uppercase tracking-wider",
-                  result.toxic > 0.5 
-                    ? "bg-red-500/10 text-red-400 border-red-500/20" 
+                  result.toxic > 0.5
+                    ? "bg-red-500/10 text-red-400 border-red-500/20"
                     : "bg-green-500/10 text-green-400 border-green-500/20"
                 )}>
                   {result.toxic > 0.5 ? "TOXIC" : "CLEAN"} — {Math.round(result.toxic * 100)}% CONFIDENCE

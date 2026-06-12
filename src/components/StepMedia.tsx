@@ -1,12 +1,19 @@
 import { motion } from "motion/react";
 import type { StepMedia as StepMediaType } from "../utils/pipelines";
+import { pipelineVisuals } from "./pipeline-visuals";
 
 /**
  * Renders the animated asset in the middle of an Enlighten Me step.
- * Asset-format-agnostic: GIF/video render natively today; Lottie falls back to
- * the placeholder until a player dependency is added to the parent package.json.
+ * Asset-format-agnostic: bespoke `component` visuals (the default) render from
+ * the pipelineVisuals registry; GIF/video render natively; Lottie and unknown
+ * keys fall back to the placeholder.
  */
 export function StepMedia({ media, label }: { media: StepMediaType; label?: string }) {
+  if (media.type === "component" && media.key) {
+    const Visual = pipelineVisuals[media.key];
+    if (Visual) return <Visual />;
+  }
+
   if (media.type === "gif" && media.src) {
     return (
       <img

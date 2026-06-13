@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&amp;display=swap');
+    .bg {
+      fill: #000000;
+    }
+    .border-line {
+      fill: none;
+      stroke: #ffffff;
+      stroke-opacity: 0.12;
+      stroke-width: 1;
+    }
+    .asterisk {
+      font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+      font-style: italic;
+      fill: #ffffff;
+      font-size: 46px;
+      font-weight: 400;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+  </style>
+  <rect width="32" height="32" rx="8" class="bg"/>
+  <rect width="30" height="30" x="1" y="1" rx="7" class="border-line"/>
+  <text x="16.5" y="22" class="asterisk">*</text>
+</svg>

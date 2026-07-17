@@ -2,7 +2,7 @@
 
 ## App Description
 
-**SaySomething** is an interactive NLP web application for classifying toxic comments. Built as an academic NLP project, it lets users run live inference across four different model architectures — from a classical TF-IDF baseline to a fine-tuned RoBERTa transformer — and compare how each model behaves on the same input text.
+**SaySomething** is an NLP web application for classifying toxic comments. Built as an academic NLP project, it lets users run live inference across four different model architectures — from a classical TF-IDF baseline to a fine-tuned RoBERTa transformer — and compare how each model behaves on the same input text.
 
 All four models were trained on the [Jigsaw Toxic Comment Classification dataset](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge) and classify text across six labels: `toxic`, `severe_toxic`, `obscene`, `threat`, `insult`, and `identity_hate`.
 

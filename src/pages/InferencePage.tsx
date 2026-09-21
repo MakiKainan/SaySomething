@@ -51,16 +51,24 @@ function ScoreBars({ scores, compact }: { scores: Scores; compact?: boolean }) {
   );
 }
 
-function Verdict({ toxic, className }: { toxic: number; className?: string }) {
+// Verdict = the strongest of the six labels, so e.g. a high threat score
+// flags the comment even when the umbrella "toxic" score is lower.
+function peak(scores: Scores): [string, number] {
+  return LABELS.map((l) => [l, scores[l] ?? 0] as [string, number])
+    .reduce((a, b) => (b[1] > a[1] ? b : a));
+}
+
+function Verdict({ scores, className }: { scores: Scores; className?: string }) {
+  const [label, score] = peak(scores);
   return (
     <div className={cn(
       "py-1.5 px-4 rounded-md w-fit font-bold border uppercase tracking-wider",
-      toxic > 0.5
+      score > 0.5
         ? "bg-red-500/10 text-red-400 border-red-500/20"
         : "bg-green-500/10 text-green-400 border-green-500/20",
       className
     )}>
-      {toxic > 0.5 ? "TOXIC" : "CLEAN"} — {Math.round(toxic * 100)}%
+      {score > 0.5 ? "TOXIC" : "CLEAN"} — {label.replace(/_/g, " ")} {Math.round(score * 100)}%
     </div>
   );
 }
@@ -107,12 +115,12 @@ export function InferencePage() {
   };
 
   const compared = comparison?.filter((c) => c.scores) ?? [];
-  const flagged = compared.filter((c) => c.scores!.toxic > 0.5).length;
-  // Compare mode drives the background with the models' mean toxic score.
+  const flagged = compared.filter((c) => peak(c.scores!)[1] > 0.5).length;
+  // Compare mode drives the background with the models' mean peak score.
   const toxicScore = result
-    ? result.toxic
+    ? peak(result)[1]
     : compared.length
-    ? compared.reduce((sum, c) => sum + c.scores!.toxic, 0) / compared.length
+    ? compared.reduce((sum, c) => sum + peak(c.scores!)[1], 0) / compared.length
     : 0;
   const hasOutput = !!(result || comparison);
 
@@ -298,7 +306,7 @@ export function InferencePage() {
             className="border-t border-white/10 pt-12 mt-12"
           >
             <div className="flex flex-wrap gap-4 items-end justify-between mb-12">
-              <Verdict toxic={result.toxic} className="text-sm md:text-base" />
+              <Verdict scores={result} className="text-sm md:text-base" />
               <div className="text-white/30 text-xs uppercase tracking-wider">
                 Analyzed using {analyzedWith}
               </div>
@@ -339,7 +347,7 @@ export function InferencePage() {
                   </div>
                   {c.scores ? (
                     <>
-                      <Verdict toxic={c.scores.toxic} className="text-[11px] px-2.5 py-1 mb-5" />
+                      <Verdict scores={c.scores} className="text-[11px] px-2.5 py-1 mb-5" />
                       <ScoreBars scores={c.scores} compact />
                     </>
                   ) : (

@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { WordsPullUp } from "../components/WordsPullUp";
 import { WordsPullUpMultiStyle } from "../components/WordsPullUpMultiStyle";
@@ -6,13 +6,46 @@ import { AnimatedLetter } from "../components/AnimatedLetter";
 import { InteractiveDotField } from "../components/InteractiveDotField";
 import { motion, useInView } from "motion/react";
 import { useState, useRef } from "react";
-import { runInference } from "../utils/mockInference";
 import { cn } from "../lib/utils";
 
-// Placeholders
-const IMAGE_OR_VIDEO_CARD1 = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1470&auto=format&fit=crop";
-const IMAGE_CARD3_ICON_URL = "https://images.unsplash.com/photo-1620825937374-87fc7d62828e?q=80&w=256&auto=format&fit=crop";
-const IMAGE_CARD4_ICON_URL = "https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=256&auto=format&fit=crop";
+const modelCards = [
+  {
+    id: "01",
+    type: "Classical ML",
+    name: "TF-IDF + Logistic Regression",
+    description: "Baseline model that tokenizes text into distinct n-grams and weighs frequency. Context-blind but extremely fast.",
+    accuracy: "86.4%",
+    latency: "2ms",
+    naySub: "i dont understand :|",
+  },
+  {
+    id: "02",
+    type: "Deep Learning",
+    name: "LSTM Network",
+    description: "Processes text sequentially, holding onto cell states and gates. Captures basic syntactic context and negation.",
+    accuracy: "91.2%",
+    latency: "15ms",
+    naySub: "i dont understand :|",
+  },
+  {
+    id: "03",
+    type: "Transformer",
+    name: "DistilBERT",
+    description: "Uses bidirectional self-attention and distilled knowledge distillation to process words contextually. Retains 97% of BERT's language understanding while being 60% faster.",
+    accuracy: "94.8%",
+    latency: "32ms",
+    naySub: "i dont understand :|",
+  },
+  {
+    id: "04",
+    type: "SOTA Transformer",
+    name: "RoBERTa Pipeline",
+    description: "Robustly optimized BERT approach. Dynamic masking allows handling highly adversarial or nested toxic phrases.",
+    accuracy: "97.1%",
+    latency: "65ms",
+    naySub: "i dont know",
+  },
+];
 
 const members = [
   {
@@ -37,11 +70,6 @@ const members = [
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [inferenceText, setInferenceText] = useState("");
-  const [selectedModel, setSelectedModel] = useState("DistilBERT");
-  const [inferenceResult, setInferenceResult] = useState<any>(null);
-  const [isInferencing, setIsInferencing] = useState(false);
-  const [yays, setYays] = useState<Record<string, boolean>>({});
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   const nextSlide = () => {
@@ -49,21 +77,6 @@ export function HomePage() {
   };
   const prevSlide = () => {
     setCarouselIndex((prev) => (prev - 1 + members.length) % members.length);
-  };
-
-  const handleYay = (modelId: string) => {
-    setYays(prev => ({
-      ...prev,
-      [modelId]: !prev[modelId]
-    }));
-  };
-
-  const handleRunInference = async () => {
-    if (!inferenceText) return;
-    setIsInferencing(true);
-    const result = await runInference(inferenceText, selectedModel);
-    setInferenceResult(result);
-    setIsInferencing(false);
   };
 
   const cardsContainerRef = useRef<HTMLDivElement>(null);
@@ -228,193 +241,54 @@ export function HomePage() {
               ref={cardsContainerRef}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             >
-              {/* Card 1 - TF-IDF + Logistic Regression */}
-              <motion.div 
-                initial={{ y: 40, opacity: 0 }}
-                animate={isCardsInView ? { y: 0, opacity: 1 } : {}}
-                transition={{ delay: 0.15, ease: [0.22, 1, 0.36, 1], duration: 0.8 }}
-                className="lg:h-[480px] bg-black/40 border border-white/5 rounded-2xl p-6 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="text-[10px] text-white/20">01</span>
-                    <span className="px-2 py-0.5 border border-white/15 text-[9px] rounded-full text-white/50 uppercase tracking-widest">Classical ML</span>
-                  </div>
-                  <h3 className="text-xl font-medium mb-3">TF-IDF + Logistic Regression</h3>
-                  <p className="text-white/40 text-xs leading-relaxed mb-4">
-                    Baseline model that tokenizes text into distinct n-grams and weighs frequency. Context-blind but extremely fast.
-                  </p>
-                  <div className="space-y-1.5 pt-2 border-t border-white/5">
-                    <div className="flex justify-between text-[10px] text-white/40">
-                      <span>Accuracy:</span>
-                      <span className="text-white font-medium">86.4%</span>
+              {modelCards.map((card, i) => (
+                <motion.div
+                  key={card.id}
+                  initial={{ y: 40, opacity: 0 }}
+                  animate={isCardsInView ? { y: 0, opacity: 1 } : {}}
+                  transition={{ delay: 0.15 * (i + 1), ease: [0.22, 1, 0.36, 1], duration: 0.8 }}
+                  className="lg:h-[480px] bg-black/40 border border-white/5 rounded-2xl p-6 flex flex-col justify-between overflow-hidden"
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-6">
+                      <span className="text-[10px] text-white/20">{card.id}</span>
+                      <span className="px-2 py-0.5 border border-white/15 text-[9px] rounded-full text-white/50 uppercase tracking-widest">{card.type}</span>
                     </div>
-                    <div className="flex justify-between text-[10px] text-white/40">
-                      <span>Latency:</span>
-                      <span className="text-white font-medium">2ms</span>
+                    <h3 className="text-xl font-medium mb-3">{card.name}</h3>
+                    <p className="text-white/40 text-xs leading-relaxed mb-4">
+                      {card.description}
+                    </p>
+                    <div className="space-y-1.5 pt-2 border-t border-white/5">
+                      <div className="flex justify-between text-[10px] text-white/40">
+                        <span>Accuracy:</span>
+                        <span className="text-white font-medium">{card.accuracy}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-white/40">
+                        <span>Latency:</span>
+                        <span className="text-white font-medium">{card.latency}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Yay/Nay Buttons */}
-                <div className="mt-8 flex gap-3 items-start">
-                  <button 
-                    onClick={() => navigate("/inference")}
-                    className="nav-pill flex-1 border border-white/10 text-white bg-transparent hover:border-white/30 hover:bg-white/5 font-bold uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <span className="nav-label text-xs">Yay</span>
-                    <span className="nav-sub text-[10px] text-white/50 normal-case font-normal tracking-normal">lets gooo</span>
-                  </button>
-                  <button 
-                    onClick={() => navigate("/models#model-01")}
-                    className="nav-pill flex-1 bg-white text-black hover:opacity-90 font-bold uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <span className="nav-label text-xs">Nay</span>
-                    <span className="nav-sub text-[10px] text-black/60 normal-case font-normal tracking-normal">i dont understand :|</span>
-                  </button>
-                </div>
-              </motion.div>
-
-              {/* Card 2 - LSTM */}
-              <motion.div 
-                initial={{ y: 40, opacity: 0 }}
-                animate={isCardsInView ? { y: 0, opacity: 1 } : {}}
-                transition={{ delay: 0.3, ease: [0.22, 1, 0.36, 1], duration: 0.8 }}
-                className="lg:h-[480px] bg-black/40 border border-white/5 rounded-2xl p-6 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="text-[10px] text-white/20">02</span>
-                    <span className="px-2 py-0.5 border border-white/15 text-[9px] rounded-full text-white/50 uppercase tracking-widest">Deep Learning</span>
+                  {/* Yay/Nay Buttons */}
+                  <div className="mt-8 flex gap-3 items-start">
+                    <button 
+                      onClick={() => navigate("/inference")}
+                      className="nav-pill flex-1 border border-white/10 text-white bg-transparent hover:border-white/30 hover:bg-white/5 font-bold uppercase tracking-wider transition-all cursor-pointer"
+                    >
+                      <span className="nav-label text-xs">Yay</span>
+                      <span className="nav-sub text-[10px] text-white/50 normal-case font-normal tracking-normal">lets gooo</span>
+                    </button>
+                    <button 
+                      onClick={() => navigate(`/models#model-${card.id}`)}
+                      className="nav-pill flex-1 bg-white text-black hover:opacity-90 font-bold uppercase tracking-wider transition-all cursor-pointer"
+                    >
+                      <span className="nav-label text-xs">Nay</span>
+                      <span className="nav-sub text-[10px] text-black/60 normal-case font-normal tracking-normal">{card.naySub}</span>
+                    </button>
                   </div>
-                  <h3 className="text-xl font-medium mb-3">LSTM Network</h3>
-                  <p className="text-white/40 text-xs leading-relaxed mb-4">
-                    Processes text sequentially, holding onto cell states and gates. Captures basic syntactic context and negation.
-                  </p>
-                  <div className="space-y-1.5 pt-2 border-t border-white/5">
-                    <div className="flex justify-between text-[10px] text-white/40">
-                      <span>Accuracy:</span>
-                      <span className="text-white font-medium">91.2%</span>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-white/40">
-                      <span>Latency:</span>
-                      <span className="text-white font-medium">15ms</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Yay/Nay Buttons */}
-                <div className="mt-8 flex gap-3 items-start">
-                  <button 
-                    onClick={() => navigate("/inference")}
-                    className="nav-pill flex-1 border border-white/10 text-white bg-transparent hover:border-white/30 hover:bg-white/5 font-bold uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <span className="nav-label text-xs">Yay</span>
-                    <span className="nav-sub text-[10px] text-white/50 normal-case font-normal tracking-normal">lets gooo</span>
-                  </button>
-                  <button 
-                    onClick={() => navigate("/models#model-02")}
-                    className="nav-pill flex-1 bg-white text-black hover:opacity-90 font-bold uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <span className="nav-label text-xs">Nay</span>
-                    <span className="nav-sub text-[10px] text-black/60 normal-case font-normal tracking-normal">i dont understand :|</span>
-                  </button>
-                </div>
-              </motion.div>
-
-              {/* Card 3 - DistilBERT */}
-              <motion.div 
-                initial={{ y: 40, opacity: 0 }}
-                animate={isCardsInView ? { y: 0, opacity: 1 } : {}}
-                transition={{ delay: 0.45, ease: [0.22, 1, 0.36, 1], duration: 0.8 }}
-                className="lg:h-[480px] bg-black/40 border border-white/5 rounded-2xl p-6 flex flex-col justify-between overflow-hidden"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="text-[10px] text-white/20">03</span>
-                    <span className="px-2 py-0.5 border border-white/15 text-[9px] rounded-full text-white/50 uppercase tracking-widest">Transformer</span>
-                  </div>
-                  <h3 className="text-xl font-medium mb-3">DistilBERT</h3>
-                  <p className="text-white/40 text-xs leading-relaxed mb-4">
-                    Uses bidirectional self-attention and distilled knowledge distillation to process words contextually. Retains 97% of BERT's language understanding while being 60% faster.
-                  </p>
-                  <div className="space-y-1.5 pt-2 border-t border-white/5">
-                    <div className="flex justify-between text-[10px] text-white/40">
-                      <span>Accuracy:</span>
-                      <span className="text-white font-medium">94.8%</span>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-white/40">
-                      <span>Latency:</span>
-                      <span className="text-white font-medium">32ms</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Yay/Nay Buttons */}
-                <div className="mt-8 flex gap-3 items-start">
-                  <button 
-                    onClick={() => navigate("/inference")}
-                    className="nav-pill flex-1 border border-white/10 text-white bg-transparent hover:border-white/30 hover:bg-white/5 font-bold uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <span className="nav-label text-xs">Yay</span>
-                    <span className="nav-sub text-[10px] text-white/50 normal-case font-normal tracking-normal">lets gooo</span>
-                  </button>
-                  <button 
-                    onClick={() => navigate("/models#model-03")}
-                    className="nav-pill flex-1 bg-white text-black hover:opacity-90 font-bold uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <span className="nav-label text-xs">Nay</span>
-                    <span className="nav-sub text-[10px] text-black/60 normal-case font-normal tracking-normal">i dont understand :|</span>
-                  </button>
-                </div>
-              </motion.div>
-
-              {/* Card 4 - RoBERTa */}
-              <motion.div 
-                initial={{ y: 40, opacity: 0 }}
-                animate={isCardsInView ? { y: 0, opacity: 1 } : {}}
-                transition={{ delay: 0.6, ease: [0.22, 1, 0.36, 1], duration: 0.8 }}
-                className="lg:h-[480px] bg-black/40 border border-white/5 rounded-2xl p-6 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-6">
-                    <span className="text-[10px] text-white/20">04</span>
-                    <span className="px-2 py-0.5 border border-white/15 text-[9px] rounded-full text-white/50 uppercase tracking-widest">SOTA Transformer</span>
-                  </div>
-                  <h3 className="text-xl font-medium mb-3">RoBERTa Pipeline</h3>
-                  <p className="text-white/40 text-xs leading-relaxed mb-4">
-                    Robustly optimized BERT approach. Dynamic masking allows handling highly adversarial or nested toxic phrases.
-                  </p>
-                  <div className="space-y-1.5 pt-2 border-t border-white/5">
-                    <div className="flex justify-between text-[10px] text-white/40">
-                      <span>Accuracy:</span>
-                      <span className="text-white font-medium">97.1%</span>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-white/40">
-                      <span>Latency:</span>
-                      <span className="text-white font-medium">65ms</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Yay/Nay Buttons */}
-                <div className="mt-8 flex gap-3 items-start">
-                  <button 
-                    onClick={() => navigate("/inference")}
-                    className="nav-pill flex-1 border border-white/10 text-white bg-transparent hover:border-white/30 hover:bg-white/5 font-bold uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <span className="nav-label text-xs">Yay</span>
-                    <span className="nav-sub text-[10px] text-white/50 normal-case font-normal tracking-normal">lets gooo</span>
-                  </button>
-                  <button 
-                    onClick={() => navigate("/models#model-04")}
-                    className="nav-pill flex-1 bg-white text-black hover:opacity-90 font-bold uppercase tracking-wider transition-all cursor-pointer"
-                  >
-                    <span className="nav-label text-xs">Nay</span>
-                    <span className="nav-sub text-[10px] text-black/60 normal-case font-normal tracking-normal">i dont know</span>
-                  </button>
-                </div>
-              </motion.div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </div>

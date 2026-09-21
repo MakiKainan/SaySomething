@@ -5,11 +5,8 @@ import { useEffect, useState } from "react";
 import { FloatingAlphabets } from "../components/FloatingAlphabets";
 import { EnlightenModal } from "../components/EnlightenModal";
 import { modelPipelines } from "../utils/pipelines";
+import { StepMedia } from "../components/StepMedia";
 
-const GIF_MODEL_1 = "https://images.unsplash.com/photo-1509228468518-180dd4864904?q=80&w=2070&auto=format&fit=crop";
-const GIF_MODEL_2 = "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop";
-const GIF_MODEL_3 = "https://images.unsplash.com/photo-1555949963-aa79dcee981c?q=80&w=2070&auto=format&fit=crop";
-const GIF_MODEL_4 = "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1965&auto=format&fit=crop";
 
 export function ModelsPage() {
   const [activeModelId, setActiveModelId] = useState<string | null>(null);
@@ -36,8 +33,7 @@ export function ModelsPage() {
         { label: "Mean ROC-AUC", value: "0.9449" },
         { label: "F1 Score", value: "0.4877" },
         { label: "Inference", value: "2ms" }
-      ],
-      media: GIF_MODEL_1
+      ]
     },
     {
       id: "02",
@@ -48,8 +44,7 @@ export function ModelsPage() {
         { label: "Mean ROC-AUC", value: "0.9538" },
         { label: "F1 Score", value: "0.4097" },
         { label: "Inference", value: "15ms" }
-      ],
-      media: GIF_MODEL_2
+      ]
     },
     {
       id: "03",
@@ -60,8 +55,7 @@ export function ModelsPage() {
         { label: "Mean ROC-AUC", value: "0.9796" },
         { label: "F1 Score", value: "0.4896" },
         { label: "Inference", value: "35ms" }
-      ],
-      media: GIF_MODEL_3
+      ]
     },
     {
       id: "04",
@@ -72,8 +66,7 @@ export function ModelsPage() {
         { label: "Mean ROC-AUC", value: "0.9848" },
         { label: "F1 Score", value: "0.5818" },
         { label: "Inference", value: "65ms" }
-      ],
-      media: GIF_MODEL_4
+      ]
     }
   ];
 
@@ -134,13 +127,16 @@ export function ModelsPage() {
                 </button>
               </div>
 
-              <div className="rounded-xl overflow-hidden border border-white/5 aspect-video md:aspect-square bg-black">
-                <img
-                  src={model.media}
-                  alt={model.name}
-                  className="w-full h-full object-cover opacity-80"
-                />
-              </div>
+              <button
+                onClick={() => setActiveModelId(model.id)}
+                aria-label={`Walk through the ${model.name} pipeline`}
+                className="group relative block w-full rounded-xl overflow-hidden border border-white/5 hover:border-white/15 aspect-video bg-black transition-colors cursor-pointer text-left"
+              >
+                <StepMedia media={modelPipelines[model.id].steps[0].media} />
+                <span className="absolute bottom-3 left-3 z-20 text-[10px] uppercase tracking-widest text-white/30 group-hover:text-white/70 transition-colors">
+                  Step 1 of {modelPipelines[model.id].steps.length} · click to explore
+                </span>
+              </button>
             </div>
           </motion.div>
         ))}

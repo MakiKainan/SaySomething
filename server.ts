@@ -23,6 +23,9 @@ app.post('/api/inference', async (req, res) => {
     if (!text || !model) {
       return res.status(400).json({ error: 'Text and model parameters are required' });
     }
+    if (typeof text !== 'string' || text.length > 2000) {
+      return res.status(400).json({ error: 'Text must be a string of at most 2000 characters' });
+    }
 
     let systemInstruction = '';
 

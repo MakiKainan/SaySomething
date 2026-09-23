@@ -1,0 +1,10 @@
+spaces
+torch==2.13.0  # newest version ZeroGPU supports
+transformers>=5
+tensorflow-cpu
+scikit-learn==1.6.1  # must match the version the TF-IDF models were pickled with
+scipy
+joblib
+nltk
+huggingface_hub
+gradio==6.28.0

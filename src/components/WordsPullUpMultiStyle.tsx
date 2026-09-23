@@ -13,9 +13,10 @@ interface WordsPullUpMultiStyleProps {
 
 export function WordsPullUpMultiStyle({ segments, className }: WordsPullUpMultiStyleProps) {
   return (
-    <div className={cn("inline-block", className)}>
+    <span className={cn("inline-block", className)}>
+      <span className="sr-only">{segments.map((s) => s.text).join(" ")}</span>
       {segments.map((segment, sgIdx) => (
-        <span key={sgIdx} className={cn("inline-block mr-2 last:mr-0", segment.className)}>
+        <span key={sgIdx} aria-hidden className={cn("inline-block mr-2 last:mr-0", segment.className)}>
           {segment.text.split(" ").map((word, wIdx) => (
             <motion.span
               key={`${sgIdx}-${wIdx}`}
@@ -34,6 +35,6 @@ export function WordsPullUpMultiStyle({ segments, className }: WordsPullUpMultiS
           ))}
         </span>
       ))}
-    </div>
+    </span>
   );
 }

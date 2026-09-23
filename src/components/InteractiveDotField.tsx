@@ -131,6 +131,7 @@ export function InteractiveDotField() {
 
   return (
     <canvas
+      aria-hidden
       ref={canvasRef}
       className="absolute inset-0 w-full h-full"
       style={{ display: "block" }}

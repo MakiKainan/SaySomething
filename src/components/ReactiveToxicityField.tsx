@@ -67,6 +67,7 @@ export function ReactiveToxicityField({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1;
 
     const makeWord = (w: number, h: number): Word => {
       const text = WORDS[Math.floor(Math.random() * WORDS.length)];
@@ -144,8 +145,8 @@ export function ReactiveToxicityField({
         const word = words[i];
         const rad = word.radius;
 
-        word.x += word.vx * energy;
-        word.y += word.vy * energy;
+        word.x += word.vx * energy * still;
+        word.y += word.vy * energy * still;
 
         // Bounce off bounds.
         if (word.x - rad < 0) { word.x = rad; word.vx = -word.vx; }
@@ -155,7 +156,7 @@ export function ReactiveToxicityField({
 
         // Per-frame jitter (visual only — does not affect bounds).
         let jx = 0, jy = 0;
-        if (jitter > 0.01) {
+        if (jitter > 0.01 && still) {
           jx = Math.sin(frame * 0.5 + word.jitterSeed) * jitter;
           jy = Math.cos(frame * 0.6 + word.jitterSeed) * jitter;
         }

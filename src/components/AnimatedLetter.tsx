@@ -18,9 +18,10 @@ export function AnimatedLetter({ text, className }: AnimatedLetterProps) {
 
   return (
     <div ref={containerRef} className={cn("inline-block", className)}>
+      <p className="sr-only">{text}</p>
       {words.map((word, wIdx) => {
         return (
-          <span key={wIdx} className="inline-block mr-[0.25em]">
+          <span key={wIdx} aria-hidden className="inline-block mr-[0.25em]">
             {word.split("").map((char, cIdx) => {
               const start = (wIdx * 5 + cIdx) / (text.length + 5); 
               const end = start + 0.1;

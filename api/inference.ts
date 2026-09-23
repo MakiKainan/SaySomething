@@ -82,16 +82,27 @@ Your task: Evaluate the input text and return the probability scores for the six
       required: ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
     };
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Analyze the following comment: "${text}"`,
-      config: {
-        systemInstruction: systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: responseSchema,
-        temperature: 0.1,
+    // Gemini sometimes 503s under load, so fall through to the next model.
+    let response: any, lastErr: any;
+    for (const m of ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest']) {
+      try {
+        response = await ai.models.generateContent({
+          model: m,
+          contents: `Analyze the following comment: "${text}"`,
+          config: {
+            systemInstruction: systemInstruction,
+            responseMimeType: 'application/json',
+            responseSchema: responseSchema,
+            temperature: 0.1,
+          }
+        });
+        break;
+      } catch (e) {
+        lastErr = e;
+        console.warn(`${m} failed, trying next`);
       }
-    });
+    }
+    if (!response) throw lastErr;
 
     const resultText = response.text;
     if (!resultText) {

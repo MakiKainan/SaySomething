@@ -25,6 +25,7 @@ export function FloatingAlphabets() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1;
 
     // Helper to generate a random letter
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -104,9 +105,9 @@ export function FloatingAlphabets() {
         const letter = letters[i];
 
         // Update positions and angle
-        letter.x += letter.vx;
-        letter.y += letter.vy;
-        letter.angle += letter.spin;
+        letter.x += letter.vx * still;
+        letter.y += letter.vy * still;
+        letter.angle += letter.spin * still;
 
         // Collision detection and resolution
         const r = letter.radius;
@@ -184,6 +185,7 @@ export function FloatingAlphabets() {
 
   return (
     <canvas
+      aria-hidden
       ref={canvasRef}
       id="floating-alphabets-canvas"
       className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 bg-black"

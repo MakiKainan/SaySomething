@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -19,6 +19,8 @@ export function EnlightenModal({
   onClose: () => void;
 }) {
   const [step, setStep] = useState(0);
+  const [opener] = useState(() => document.activeElement as HTMLElement | null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   // direction drives the slide animation (+1 next, -1 prev)
   const [direction, setDirection] = useState(0);
 
@@ -42,12 +44,14 @@ export function EnlightenModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [step, total]);
 
-  // Lock body scroll while open.
+  // Lock body scroll while open; hand focus back to the trigger on close.
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
     return () => {
       document.body.style.overflow = prev;
+      opener?.focus();
     };
   }, []);
 
@@ -81,26 +85,27 @@ export function EnlightenModal({
         <div className="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-4 border-b border-white/5">
           <div>
             <div className="flex items-center gap-3 mb-1.5">
-              <span className="text-white/20 text-xs">{model.id}</span>
+              <span className="text-white/50 text-xs">{model.id}</span>
               <span className="border border-white/15 text-white/50 text-[10px] rounded-full px-2.5 py-0.5 uppercase tracking-wider">
                 {model.type}
               </span>
             </div>
-            <h3 className="text-lg sm:text-xl font-medium text-white leading-snug">
+            <h2 className="text-lg sm:text-xl font-medium text-white leading-snug">
               {model.name}
-            </h3>
+            </h2>
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
             {hasSteps && (
-              <span className="text-white/30 text-xs tabular-nums tracking-wider">
+              <span className="text-white/55 text-xs tabular-nums tracking-wider">
                 {String(step + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
               </span>
             )}
             <button
               onClick={onClose}
               aria-label="Close"
-              className="text-white/40 hover:text-white transition-colors"
+              ref={closeRef}
+              className="text-white/60 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -126,13 +131,13 @@ export function EnlightenModal({
                   </div>
 
                   {/* Explanation (bottom) */}
-                  <div className="text-white/30 text-[10px] uppercase tracking-widest mb-2">
+                  <div className="text-white/55 text-[10px] uppercase tracking-widest mb-2">
                     Step {step + 1}
                   </div>
                   <h4 className="text-white text-lg font-medium mb-3">
                     {current.title}
                   </h4>
-                  <p className="text-white/55 text-sm md:text-base leading-relaxed">
+                  <p className="text-white/70 text-sm md:text-base leading-relaxed" aria-live="polite">
                     {current.body}
                   </p>
                 </motion.div>

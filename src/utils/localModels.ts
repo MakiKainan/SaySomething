@@ -46,21 +46,36 @@ export function download(m: Manifest, onProgress: (bytes: number) => void) {
 
 async function fetchAll(m: Manifest) {
   const cache = await caches.open(CACHE);
-  const progress = (bytes: number) => watchers.forEach((w) => w((done += bytes)));
-  await Promise.all(
-    Object.keys(m.files).map(async (f) => {
-      if (await cache.match(BASE + f)) return progress(m.files[f]);
-      const res = await fetch(BASE + f);
-      if (!res.ok || !res.body) throw new Error(`Download failed for ${f} (${res.status})`);
-      const chunks: Uint8Array[] = [];
-      const reader = res.body.getReader();
-      for (let r; !(r = await reader.read()).done; ) {
-        chunks.push(r.value);
-        progress(r.value.length);
-      }
-      await cache.put(BASE + f, new Response(new Blob(chunks)));
-    }),
-  );
+  // Bytes per file (not a running sum), so nothing can be counted twice.
+  const got: Record<string, number> = {};
+  const progress = (f: string, bytes: number) => {
+    got[f] = bytes;
+    done = Object.values(got).reduce((a, b) => a + b, 0);
+    watchers.forEach((w) => w(done));
+  };
+  const abort = new AbortController(); // one file fails → stop the rest, so a retry starts clean
+  try {
+    await Promise.all(
+      Object.keys(m.files).map(async (f) => {
+        if (await cache.match(BASE + f)) return progress(f, m.files[f]);
+        const res = await fetch(BASE + f, { signal: abort.signal });
+        if (!res.ok || !res.body) throw new Error(`Download failed for ${f} (${res.status})`);
+        const chunks: Uint8Array[] = [];
+        let n = 0;
+        const reader = res.body.getReader();
+        for (let r; !(r = await reader.read()).done; ) {
+          chunks.push(r.value);
+          progress(f, (n += r.value.length));
+        }
+        // Never cache a cut-off file: it would look downloaded but fail to load.
+        if (n !== m.files[f]) throw new Error(`${f} arrived incomplete (${n} of ${m.files[f]} bytes). Try again.`);
+        await cache.put(BASE + f, new Response(new Blob(chunks)));
+      }),
+    );
+  } catch (e) {
+    abort.abort();
+    throw e;
+  }
   // Written last, so a half-finished download never looks complete.
   await cache.put(BASE + "manifest.json", new Response(JSON.stringify(m)));
 }
@@ -209,7 +224,11 @@ export function runInference(text: string, model: string, get: Get = fromCache):
   if (!LOADERS[model]) return Promise.reject(new Error(`Unknown model: ${model}`));
   if (!text.trim() || text.length > MAX_TEXT) return Promise.reject(new Error(`Text must be 1-${MAX_TEXT} characters`));
   const job = queue.then(async () => {
-    if (!loaded.has(model)) loaded.set(model, LOADERS[model](get).catch((e) => (loaded.delete(model), Promise.reject(e))));
+    if (!loaded.has(model))
+      loaded.set(model, LOADERS[model](get).catch((e) => {
+        loaded.delete(model);
+        throw new Error(`Couldn't load ${model} (${(e as Error)?.message ?? e}). If it keeps failing, press Delete above and download again.`);
+      }));
     const scores = await (await loaded.get(model)!)(text);
     return Object.fromEntries(LABELS.map((l, i) => [l, scores[i]])) as Scores;
   });

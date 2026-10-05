@@ -1,6 +1,0 @@
-{
-  "name": "SaySomething",
-  "description": "A high-performance pipeline for classifying and scoring toxic conversational behavior in real-time.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

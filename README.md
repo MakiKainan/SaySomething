@@ -15,17 +15,21 @@ Predictions come from the real trained models, running **in the visitor's browse
 1. **Multi-Model Inference** — Classify any comment using four different models (TF-IDF + Logistic Regression, LSTM, DistilBERT, RoBERTa) and compare their predictions side by side.
 2. **Six-Label Toxicity Classification** — Each prediction covers six toxicity categories: toxic, severe toxic, obscene, threat, insult, and identity hate.
 3. **Model Behavior Comparison** — See how classical ML, deep learning, and transformer models handle the same input differently, including each model's known weaknesses.
-4. **Model Information Pages** — Dedicated pages explaining each model's architecture, accuracy, and latency characteristics.
+4. **Model Information Pages** — Dedicated pages explaining each model's architecture, metrics and weaknesses.
 5. **Interactive & Animated UI** — Smooth, responsive interface with animations built using Motion (Framer Motion).
 
 ### Model Overview
 
-| # | Model | Type | Accuracy | Latency |
-|---|-------|------|----------|---------|
-| 01 | TF-IDF + Logistic Regression | Classical ML | 86.4% | ~2ms |
-| 02 | LSTM Network | Deep Learning | 91.2% | ~15ms |
-| 03 | DistilBERT | Transformer | 94.8% | ~32ms |
-| 04 | RoBERTa | SOTA Transformer | 97.1% | ~65ms |
+| # | Model | Type | Mean ROC-AUC | Macro F1 | Threat F1 |
+|---|-------|------|--------------|----------|-----------|
+| 01 | TF-IDF + Logistic Regression | Classical ML | 0.945 | 0.49 | 0.08 |
+| 02 | LSTM (BiLSTM → BiGRU) | Deep Learning | 0.954 | 0.41 | 0.00 |
+| 03 | DistilBERT | Transformer | 0.980 | 0.49 | 0.18 |
+| 04 | RoBERTa | Transformer | 0.985 | 0.58 | 0.35 |
+
+ROC-AUC barely separates the four. F1 shows the real gap: `threat` is only 0.29% of the data, the
+LSTM never predicts it, and the per-label class weights in the transformer fine-tunes are what
+lift it.
 
 ---
 

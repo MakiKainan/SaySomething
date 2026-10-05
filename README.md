@@ -48,8 +48,6 @@ npm run dev
 
 Open `http://localhost:3000/inference`, click **Download**, then analyze. To deploy, push to GitHub; Vercel builds it as a static site. No environment variables or server needed.
 
-**Booth mode:** after 60s with no input the app returns to the home page and loops `public/idle.mp4` full-screen; any touch, key or mouse move dismisses it. Change the delay with `IDLE_MS` in `src/App.tsx`.
-
 ### Re-exporting the models (only after retraining)
 
 The browser files are built from the original weights (private repos `phuuun/saysomething-{tfidf,lstm,distilbert,roberta}`) by [`space/export_web.py`](space/export_web.py), which reuses the loading code in [`space/app.py`](space/app.py).
@@ -94,7 +92,6 @@ saysomething/
 │   ├── app.py            # Loads the original Python models (reference implementation)
 │   ├── export_web.py     # Converts them to browser files (ONNX + JSON)
 │   └── check_web.ts      # Checks the browser code against the Python scores
-├── public/idle.mp4       # Booth-mode idle video
 └── my nlp models/        # Jupyter notebooks & training artifacts
 ```
 

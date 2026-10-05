@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
-import { MotionConfig, AnimatePresence, motion } from "motion/react";
+import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import { MotionConfig } from "motion/react";
 import { Navbar } from "./components/Navbar";
 import { HomePage } from "./pages/HomePage";
 import { InferencePage } from "./pages/InferencePage";
@@ -24,51 +24,6 @@ function ScrollManager() {
     return () => clearTimeout(id);
   }, [pathname, hash]);
   return null;
-}
-
-// Booth mode: after a minute with no input, go home and loop the showreel.
-// Any touch, key or mouse move dismisses it.
-const IDLE_MS = 60_000;
-
-function IdleVideo() {
-  const [idle, setIdle] = useState(false);
-  const navigate = useNavigate();
-  useEffect(() => {
-    let t: ReturnType<typeof setTimeout>;
-    const wake = () => {
-      setIdle(false);
-      clearTimeout(t);
-      t = setTimeout(() => {
-        setIdle(true);
-        navigate("/");
-      }, IDLE_MS);
-    };
-    const events = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"];
-    events.forEach((e) => window.addEventListener(e, wake, { passive: true }));
-    wake();
-    return () => {
-      clearTimeout(t);
-      events.forEach((e) => window.removeEventListener(e, wake));
-    };
-  }, [navigate]);
-  return (
-    <AnimatePresence>
-      {idle && (
-        <motion.div
-          className="fixed inset-0 z-[300] bg-black cursor-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <video className="w-full h-full object-cover" src="/idle.mp4" autoPlay muted loop playsInline />
-          <div className="absolute bottom-10 inset-x-0 text-center text-white/70 text-sm tracking-widest uppercase animate-pulse">
-            Touch anywhere to start
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
 }
 
 function Footer() {
@@ -106,7 +61,6 @@ export default function App() {
               Skip to content
             </a>
             <ScrollManager />
-            <IdleVideo />
             <Navbar />
             <main id="main">
               <Routes>

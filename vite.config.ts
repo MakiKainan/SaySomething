@@ -6,6 +6,8 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    // Pre-bundling moves onnxruntime-web away from its .wasm file, so it can't find it in dev.
+    optimizeDeps: { exclude: ['onnxruntime-web'] },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

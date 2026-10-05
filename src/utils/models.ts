@@ -3,7 +3,7 @@
 
 export type ModelInfo = {
   id: string;
-  /** Name the /api/inference endpoint expects. */
+  /** Name runInference (utils/localModels.ts) expects. */
   key: string;
   name: string;
   type: string;

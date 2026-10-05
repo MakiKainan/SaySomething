@@ -5,7 +5,8 @@ import { WordsPullUp } from "../components/WordsPullUp";
 import { ReactiveToxicityField, type FieldState } from "../components/ReactiveToxicityField";
 import { cn } from "../lib/utils";
 import { useDepth } from "../lib/depth";
-import { runInference } from "../utils/mockInference";
+import { runInference } from "../utils/localModels";
+import { ModelDownload, useLocalModels } from "../components/ModelDownload";
 import { LABEL_INFO, LABELS, MODELS, peak, pretty, type Scores } from "../utils/models";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -172,9 +173,11 @@ export function InferencePage() {
   const [comparison, setComparison] = useState<Row[] | null>(null);
   const [error, setError] = useState("");
   const [analyzedWith, setAnalyzedWith] = useState("");
+  const models = useLocalModels();
+  const ready = models.status === "ready";
 
   const handleAnalyze = async () => {
-    if (!text.trim() || isInferencing) return;
+    if (!text.trim() || isInferencing || !ready) return;
     setIsInferencing(true);
     setResult(null);
     setComparison(null);
@@ -247,6 +250,8 @@ export function InferencePage() {
           </motion.p>
         </header>
 
+        <ModelDownload models={models} />
+
         <motion.div {...rise(0.3)} role="group" aria-label="Choose a model" className="flex flex-wrap gap-2.5 mb-6">
           {MODELS.map((m) => (
             <button key={m.key} type="button" aria-pressed={selectedModel === m.key} onClick={() => setSelectedModel(m.key)} className={pill(selectedModel === m.key)}>
@@ -302,7 +307,7 @@ export function InferencePage() {
           <button
             type="button"
             onClick={handleAnalyze}
-            disabled={isInferencing || !text.trim()}
+            disabled={isInferencing || !text.trim() || !ready}
             className="bg-white text-black rounded-full px-8 py-3 font-medium hover:bg-white/90 disabled:opacity-50 disabled:hover:bg-white transition-all flex items-center justify-center min-w-[140px] cursor-pointer disabled:cursor-not-allowed"
           >
             {isInferencing ? (
@@ -326,7 +331,7 @@ export function InferencePage() {
         <div aria-live="polite">
           {error && (
             <div role="alert" className="mb-12 border border-red-500/30 bg-red-500/10 text-red-200 text-sm rounded-xl px-5 py-4">
-              Couldn't reach the model: {error}
+              The model failed: {error}
             </div>
           )}
 

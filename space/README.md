@@ -10,4 +10,4 @@ Inference API for the four SaySomething toxicity models.
 Needs an `HF_TOKEN` secret (read access to the private `phuuun/saysomething-*` model repos).
 
 Gradio API endpoint `predict(text, model)`, where model is `"TF-IDF + LogReg"`, `"LSTM"`, `"DistilBERT"` or `"RoBERTa"`. Returns the six label scores.
-Runs on ZeroGPU hardware, but all four models run on CPU.
+Runs on free CPU basic hardware.

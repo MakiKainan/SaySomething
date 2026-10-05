@@ -1,7 +1,5 @@
 # Real inference for all four SaySomething models. Preprocessing mirrors the
 # training notebooks in "my nlp models/" — change one, change the other.
-import spaces  # must be imported before torch on ZeroGPU
-
 import json
 import os
 import re
@@ -87,11 +85,13 @@ def transformer(tok, model):
     return run
 
 
+DISTILBERT = load_transformer("distilbert", "distilbert-base-uncased", "best_distilbert.pt")
+ROBERTA = load_transformer("roberta", "roberta-base", "roberta_weights.pt")
 MODELS = {
     "TF-IDF + LogReg": tfidf,
     "LSTM": lstm,
-    "DistilBERT": transformer(*load_transformer("distilbert", "distilbert-base-uncased", "best_distilbert.pt")),
-    "RoBERTa": transformer(*load_transformer("roberta", "roberta-base", "roberta_weights.pt")),
+    "DistilBERT": transformer(*DISTILBERT),
+    "RoBERTa": transformer(*ROBERTA),
 }
 
 
@@ -104,18 +104,11 @@ def predict(text, model):
     return {l: float(s) for l, s in zip(LABELS, MODELS[model](text))}
 
 
-# ponytail: every model runs on CPU so requests never burn the ZeroGPU daily
-# quota. ZeroGPU refuses to start without a @spaces.GPU function, so this one
-# exists only to pass that check. Move a model onto it if CPU gets too slow.
-@spaces.GPU(duration=10)
-def _gpu_stub():
-    pass
-
-
-gr.Interface(
-    predict,
-    [gr.Textbox(label="Comment"), gr.Radio(list(MODELS), value="RoBERTa", label="Model")],
-    gr.JSON(label="Scores"),
-    title="SaySomething",
-    api_name="predict",
-).launch()
+if __name__ == "__main__":
+    gr.Interface(
+        predict,
+        [gr.Textbox(label="Comment"), gr.Radio(list(MODELS), value="RoBERTa", label="Model")],
+        gr.JSON(label="Scores"),
+        title="SaySomething",
+        api_name="predict",
+    ).launch()

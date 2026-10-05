@@ -6,7 +6,7 @@
 
 All four models were trained on the [Jigsaw Toxic Comment Classification dataset](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge) and classify text across six labels: `toxic`, `severe_toxic`, `obscene`, `threat`, `insult`, and `identity_hate`.
 
-Predictions come from the real trained models, running locally. The weights live in private Hugging Face repos (`phuuun/saysomething-{tfidf,lstm,distilbert,roberta}`); a small Python model server ([`space/app.py`](space/app.py)) downloads them once, loads all four, and the Express backend forwards each request to it.
+Predictions come from the real trained models, running **in the visitor's browser**. Nothing typed is sent to a server. On first visit the inference page offers a one-time download of the four models (~240 MB, with a progress bar), stored in the browser's cache until the visitor deletes them from the same page. The browser builds live in the public Hugging Face repo [`phuuun/saysomething-web`](https://huggingface.co/phuuun/saysomething-web).
 
 ---
 
@@ -32,8 +32,8 @@ Predictions come from the real trained models, running locally. The weights live
 ## Technology Used
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS v4, Motion (Framer Motion)
-- **Backend:** Express, Node.js
-- **Inference:** Python model server with Gradio (PyTorch, TensorFlow/Keras, scikit-learn)
+- **Inference:** in the browser with ONNX Runtime Web (transformers and LSTM) and a TypeScript port of the TF-IDF model and every preprocessing step
+- **Backend:** none. It's a static site (Vercel).
 - **Routing:** React Router v7
 - **Model Training:** Python, Jupyter Notebook (scikit-learn, TensorFlow/Keras, Hugging Face Transformers)
 
@@ -41,62 +41,42 @@ Predictions come from the real trained models, running locally. The weights live
 
 ## How to run app
 
-The app is two processes: the **model server** (Python, port 7860) and the **web app** (Node, port 3000). Both must be running.
-
-### Every time (already set up)
-
-Open two terminals in the project folder.
-
-**Terminal 1 — model server** (wait ~15s until it prints `Running on local URL: http://127.0.0.1:7860`):
 ```bash
-HF_HUB_OFFLINE=1 space/.venv/bin/python space/app.py
-```
-
-**Terminal 2 — web app:**
-```bash
+npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. Type something on the inference page and check that all four models return scores.
+Open `http://localhost:3000/inference`, click **Download**, then analyze. To deploy, push to GitHub; Vercel builds it as a static site. No environment variables or server needed.
 
-No internet is needed once set up: `HF_HUB_OFFLINE=1` loads the weights from the local cache.
+**Booth mode:** after 60s with no input the app returns to the home page and loops `public/idle.mp4` full-screen; any touch, key or mouse move dismisses it. Change the delay with `IDLE_MS` in `src/App.tsx`.
 
-**Something broke?** Ctrl+C both terminals and run the two commands again.
+### Re-exporting the models (only after retraining)
 
-**Booth mode:** after 60s with no input the app returns to the home page and loops `public/idle.mp4` full-screen; any touch, key or mouse move dismisses it. Change the delay with `IDLE_MS` in `src/App.tsx`. Keep the laptop plugged in with sleep and screen lock turned off.
+The browser files are built from the original weights (private repos `phuuun/saysomething-{tfidf,lstm,distilbert,roberta}`) by [`space/export_web.py`](space/export_web.py), which reuses the loading code in [`space/app.py`](space/app.py).
 
-### First-time setup (new machine)
-
-**Prerequisites:** Node.js 18+, and [uv](https://docs.astral.sh/uv/) (or Python 3.12 — **not** 3.14: the TF-IDF model needs scikit-learn 1.6.1, which has no 3.14 build).
-
-1. Install Node dependencies:
-   ```bash
-   npm install
-   ```
-2. Create the Python environment (CPU-only torch keeps the download small):
+1. Python environment (Python **3.12**: scikit-learn 1.6.1 has no 3.14 build):
    ```bash
    uv venv --python 3.12 space/.venv
    VIRTUAL_ENV=space/.venv uv pip install --index-strategy unsafe-best-match \
-     --extra-index-url https://download.pytorch.org/whl/cpu -r space/requirements.txt
+     --extra-index-url https://download.pytorch.org/whl/cpu -r space/requirements.txt onnx onnxruntime onnxscript
+   space/.venv/bin/hf auth login
    ```
-3. Create `.env` from the template and fill in a Hugging Face read token with access to the `phuuun/saysomething-*` repos:
+2. Export, check that the browser code matches Python, upload:
    ```bash
-   cp .env.example .env
-   ```
-4. Download the weights (~800 MB, one time only). This starts the model server online with the token; stop it with Ctrl+C once it prints `Running on local URL`:
-   ```bash
-   set -a; . ./.env; set +a; space/.venv/bin/python space/app.py
+   space/.venv/bin/python space/export_web.py      # writes space/web/
+   npx tsx space/check_web.ts                      # browser code vs Python scores
+   space/.venv/bin/hf upload phuuun/saysomething-web space/web . --exclude reference.json
    ```
 
-From then on, use the **Every time** steps above.
+Visitors who already downloaded the old files keep them until they press **Delete** on the inference page.
 
 ### Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start the full-stack dev server (Vite + Express) |
-| `npm run build` | Build for production |
-| `npm start` | Run the production build |
+| `npm run dev` | Dev server on :3000 |
+| `npm run build` | Build the static site into `dist/` |
+| `npm start` | Preview the production build |
 | `npm run lint` | TypeScript type-check |
 
 ---
@@ -108,13 +88,14 @@ saysomething/
 ├── src/
 │   ├── components/       # UI components (Navbar, animations, dot field)
 │   ├── pages/            # Route pages (Home, Inference, Models)
-│   ├── utils/            # Inference client logic
+│   ├── utils/            # localModels.ts: download, cache, and run the models
 │   └── lib/              # Utilities
-├── server.ts             # Express backend, forwards inference to the model server
-├── space/app.py          # Python model server (all four models)
+├── space/
+│   ├── app.py            # Loads the original Python models (reference implementation)
+│   ├── export_web.py     # Converts them to browser files (ONNX + JSON)
+│   └── check_web.ts      # Checks the browser code against the Python scores
 ├── public/idle.mp4       # Booth-mode idle video
-├── my nlp models/        # Jupyter notebooks & training artifacts
-└── .env.example          # Environment variable template
+└── my nlp models/        # Jupyter notebooks & training artifacts
 ```
 
 ---
